@@ -14,7 +14,7 @@ fi
 
 if grep "Ubuntu" "/tmp/osversion.txt" > /dev/null; then
     echo "Ubuntu"
-    aptitude install build-essential zip
+    aptitude -y install build-essential zip
 elif grep "SMP" "/tmp/osversion.txt" > /dev/null; then
     echo "CentOS"
     /usr/bin/yum -y groupinstall "Development Tools"
