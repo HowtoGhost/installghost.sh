@@ -1,5 +1,5 @@
 #!/bin/bash
-# Written by allaboutghost.com
+# Written by Andy Boutte and David Balderston of howtoinstallghost.com and allaboutghost.com
 # installGhost.sh will download and install all needed compontents to run Ghost
 
 ######Check to make sure script is being run as root######
@@ -48,13 +48,13 @@ wget --no-check-certificate https://en.ghost.org/zip/ghost-0.3.3.zip -O ghost.zi
 unzip -d ghost ghost.zip
 rm ghost.zip
 cd ghost/
-npm install --production
+/usr/local/bin/npm install --production
 
 ######Edit the Config File######
 sed -e 's/127.0.0.1/0.0.0.0/' -e 's/2368/80/' <config.example.js >config.js
 
 ######Install Forever######
-npm install -g forever
+/usr/local/bin/npm install -g forever
 
 #####Setup Forever Start Script######
 echo "#!/bin/bash" >> /usr/local/bin/ghoststart.sh
