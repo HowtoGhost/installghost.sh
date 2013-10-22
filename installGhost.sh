@@ -44,7 +44,7 @@ rm -rf $nodeversion
 ######Download and install Ghost######
 mkdir -p /var/www
 cd /var/www/
-wget --no-check-certificate https://en.ghost.org/zip/ghost-0.3.3.zip -O ghost.zip
+wget https://en.ghost.org/zip/ghost-0.3.3.zip -O ghost.zip
 unzip -d ghost ghost.zip
 rm ghost.zip
 cd ghost/
@@ -62,6 +62,7 @@ echo "export PATH=/usr/local/bin:$PATH" >> /usr/local/bin/ghoststart.sh
 echo "cd /var/www/ghost" >> /usr/local/bin/ghoststart.sh
 echo "export NODE_ENV=production" >> /usr/local/bin/ghoststart.sh
 echo "NODE_ENV=production /usr/local/bin/forever -a -l /var/log/ghost start --sourceDir /var/www/ghost index.js" >> /usr/local/bin/ghoststart.sh
+chmod 755 /usr/local/bin/ghoststart.sh
 
 ######Create Startup Cron######
 echo "@reboot /usr/local/bin/ghoststart.sh" > mycron
