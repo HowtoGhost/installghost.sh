@@ -14,9 +14,11 @@ fi
 
 if grep "Ubuntu" "/tmp/osversion.txt" > /dev/null; then
     echo "Ubuntu"
+    apt-get -y update
     aptitude -y install build-essential zip
 elif grep "SMP" "/tmp/osversion.txt" > /dev/null; then
     echo "CentOS"
+    yum -y update
     /usr/bin/yum -y groupinstall "Development Tools"
 elif grep "Debian" "/tmp/osversion.txt" > /dev/null; then
     echo "Mac OS X"
