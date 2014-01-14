@@ -14,12 +14,10 @@ fi
 
 if grep "Ubuntu" "/tmp/osversion.txt" > /dev/null; then
     echo "Ubuntu"
-    OS="ubuntu"
     apt-get -y update
     aptitude -y install build-essential zip
 elif grep "SMP" "/tmp/osversion.txt" > /dev/null; then
     echo "CentOS"
-    OS="centos"
     yum -y update
     /usr/bin/yum -y groupinstall "Development Tools"
 elif grep "Debian" "/tmp/osversion.txt" > /dev/null; then
@@ -48,7 +46,7 @@ rm -rf $nodeversion
 ######Download and install Ghost######
 mkdir -p /var/www
 cd /var/www/
-if $OS = "centos"; then
+if grep "SMP" "/tmp/osversion.txt" > /dev/null; then
 	wget --no-check-certificate https://en.ghost.org/zip/ghost-latest.zip -O ghost.zip
 else
 	wget https://en.ghost.org/zip/ghost-latest.zip -O ghost.zip
