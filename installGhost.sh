@@ -48,12 +48,6 @@ mkdir -p /var/www
 cd /var/www/
 curl -L -O https://ghost.org/zip/ghost-latest.zip
 unzip -d ghost ghost-latest.zip
-if grep "SMP" "/tmp/osversion.txt" > /dev/null; then
-	wget --no-check-certificate https://en.ghost.org/zip/ghost-latest.zip -O ghost.zip
-else
-	wget https://en.ghost.org/zip/ghost-latest.zip -O ghost.zip
-fi
-unzip -d ghost ghost.zip
 rm ghost.zip
 cd ghost/
 /usr/local/bin/npm install --production
