@@ -46,8 +46,17 @@ rm -rf $nodeversion
 ######Download and install Ghost######
 mkdir -p /var/www
 cd /var/www/
+<<<<<<< HEAD
 curl -L -O https://ghost.org/zip/ghost-latest.zip
 unzip -d ghost ghost-latest.zip
+=======
+if grep "SMP" "/tmp/osversion.txt" > /dev/null; then
+	wget --no-check-certificate https://en.ghost.org/zip/ghost-latest.zip -O ghost.zip
+else
+	wget https://en.ghost.org/zip/ghost-latest.zip -O ghost.zip
+fi
+unzip -d ghost ghost.zip
+>>>>>>> 067303ca3d48a80e454ecc6b23d348b610311d81
 rm ghost.zip
 cd ghost/
 /usr/local/bin/npm install --production
