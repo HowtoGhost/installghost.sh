@@ -53,6 +53,7 @@ cd /var/www/
 curl -L -O https://ghost.org/zip/ghost-latest.zip
 unzip -d ghost ghost-latest.zip
 rm ghost.zip
+chown -R ghost:ghost /var/www/ghost/
 
 ######Install Nginx######
 echo "installing nginx"
@@ -84,8 +85,8 @@ cd /var/www/ghost/
 ######Install PM2######
 echo "starting pm2"
 /usr/local/bin/npm install git://github.com/Unitech/pm2.git -g
-sudo -u ghost NODE_ENV=production /usr/local/bin/pm2 start index.js --name ghost
-sudo -u ghost /usr/local/bin/pm2 dump
+NODE_ENV=production /usr/local/bin/pm2 start index.js --name ghost
+s/usr/local/bin/pm2 dump
 if ($operSys="Centos"); then
 	/usr/local/bin/pm2 startup centos
 else
