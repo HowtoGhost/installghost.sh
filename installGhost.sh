@@ -14,16 +14,16 @@ fi
 
 if grep "Ubuntu" "/tmp/osversion.txt" > /dev/null; then
     echo "Ubuntu"
-    operSys="Ubuntu"
     apt-get -y update
     aptitude -y install build-essential zip
     useradd ghost
+    apt-get install nginx
 elif grep "SMP" "/tmp/osversion.txt" > /dev/null; then
     echo "CentOS"
-    operSys="CentOS"
     yum -y update
     /usr/bin/yum -y groupinstall "Development Tools"
     adduser ghost
+    /usr/bin/yum install nginx -y
 elif grep "Debian" "/tmp/osversion.txt" > /dev/null; then
     echo "Mac OS X"
 fi
@@ -56,28 +56,20 @@ rm ghost.zip
 chown -R ghost:ghost /var/www/ghost/
 
 ######Install Nginx######
-echo "installing nginx"
-if ($operSys="Centos"); then
-	/usr/bin/yum install nginx -y
-else
-	apt-get install nginx
-fi
-echo "starting nginx"
 
+echo "starting nginx"
 service nginx start
 chkconfig nginx on
 echo 'server { / location / { proxy_set_header X-Real-IP $remote_addr; proxy_set_header Host $http_host; proxy_pass http://127.0.0.1:2368; } }' > /etc/nginx/conf.d/virtual.conf
 service nginx restart
-
 echo "nginx complete"
 
 ######Switch to Ghost User######
 su - ghost
 cd /var/www/ghost/
 
-######Install and Start Ghost######
+######Install Ghost######
 /usr/local/bin/npm install --production
-/usr/local/bin/npm start --production
 
 ######Edit the Config File######
 #sed -e 's/127.0.0.1/0.0.0.0/' -e 's/2368/80/' <config.example.js >config.js
@@ -87,11 +79,13 @@ echo "starting pm2"
 /usr/local/bin/npm install git://github.com/Unitech/pm2.git -g
 NODE_ENV=production /usr/local/bin/pm2 start index.js --name ghost
 s/usr/local/bin/pm2 dump
-if ($operSys="Centos"); then
+
+if grep "Ubuntu" "/tmp/osversion.txt" > /dev/null; then
+    /usr/local/bin/pm2 startup ubuntu
+else 
 	/usr/local/bin/pm2 startup centos
-else
-	/usr/local/bin/pm2 startup Ubuntu
 fi
+
 sed -i '0,/USER=root/ s/USER=root/#USER=ghost/' /etc/init.d/pm2-init.sh
 
 echo "pm2 complete"
