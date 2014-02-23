@@ -23,6 +23,7 @@ elif grep "SMP" "/tmp/osversion.txt" > /dev/null; then
     yum -y update
     /usr/bin/yum -y groupinstall "Development Tools"
     adduser ghost
+    sudo su -c 'rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
     /usr/bin/yum install nginx -y
 elif grep "Debian" "/tmp/osversion.txt" > /dev/null; then
     echo "Mac OS X"
@@ -76,7 +77,7 @@ cd /var/www/ghost/
 
 ######Install PM2######
 echo "starting pm2"
-/usr/local/bin/npm install git://github.com/Unitech/pm2.git -g
+/usr/local/bin/npm pm2 -g
 NODE_ENV=production /usr/local/bin/pm2 start index.js --name ghost
 s/usr/local/bin/pm2 dump
 
