@@ -55,6 +55,7 @@ curl -L -O https://ghost.org/zip/ghost-latest.zip
 unzip -d ghost ghost-latest.zip
 rm ghost.zip
 chown -R ghost:ghost /var/www/ghost/
+cd ghost/
 
 ######Install Nginx######
 
@@ -64,6 +65,9 @@ chkconfig nginx on
 echo 'server { / location / { proxy_set_header X-Real-IP $remote_addr; proxy_set_header Host $http_host; proxy_pass http://127.0.0.1:2368; } }' > /etc/nginx/conf.d/virtual.conf
 service nginx restart
 echo "nginx complete"
+
+######Install PM2######
+/usr/local/bin/npm install pm2 -g
 
 ######Switch to Ghost User######
 su - ghost
@@ -75,9 +79,9 @@ cd /var/www/ghost/
 ######Edit the Config File######
 #sed -e 's/127.0.0.1/0.0.0.0/' -e 's/2368/80/' <config.example.js >config.js
 
-######Install PM2######
+######Run PM2######
 echo "starting pm2"
-/usr/local/bin/npm pm2 -g
+/usr/local/bin/npm install pm2 -g
 NODE_ENV=production /usr/local/bin/pm2 start index.js --name ghost
 s/usr/local/bin/pm2 dump
 
