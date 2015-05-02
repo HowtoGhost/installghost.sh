@@ -48,7 +48,7 @@ mkdir -p /var/www
 cd /var/www/
 curl -L -O https://ghost.org/zip/ghost-latest.zip
 unzip -d ghost ghost-latest.zip
-rm ghost.zip
+rm ghost-latest.zip
 cd ghost/
 /usr/local/bin/npm install --production
 
