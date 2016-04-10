@@ -1,47 +1,35 @@
 #!/bin/bash
+
 # Written by Andy Boutte and David Balderston of howtoinstallghost.com and allaboutghost.com
 # installGhost.sh will download and install all needed compontents to run Ghost
 
+clear
+
+echo ""
+
 ######Check to make sure script is being run as root######
-if [[ `whoami` != root ]]; then
+if [ `whoami` != root ]; then
     echo "This script must be run as root"
     exit 1
 fi
 
-######Check to see what OS is being used and install dependencies######
+echo "This script installs Nginx and Ghost on Ubuntu"
+echo "To configure Nginx and Ghost please provide your hostname:"
+echo ""
+read HOSTNAME
 
-/bin/uname -a > /tmp/osversion.txt
+######Check to make sure we are running on Ubuntu######
 
-if grep "Ubuntu" "/tmp/osversion.txt" > /dev/null; then
-    echo "Ubuntu"
-    apt-get -y update
-    aptitude -y install build-essential zip
-elif grep "SMP" "/tmp/osversion.txt" > /dev/null; then
-    echo "CentOS"
-    yum -y update
-    /usr/bin/yum -y groupinstall "Development Tools"
-elif grep "Debian" "/tmp/osversion.txt" > /dev/null; then
-    echo "Mac OS X"
+if ! $(uname -a | grep -q Ubuntu); then
+    echo "Only Ubuntu is supported"
+    exit
 fi
 
 ######Download and install Node######
-cd /tmp/
-wget http://nodejs.org/dist/node-latest.tar.gz
-echo "node downloaded"
-tar -xzf node-latest.tar.gz
-echo "node unzipped"
-rm node-latest.tar.gz
-
-nodeversion=`ls | grep node`
-
-cd $nodeversion
-./configure
-echo "node configured"
-make -s
-make install
-echo "node installed"
-cd /tmp
-rm -rf $nodeversion
+apt-get -y update
+apt-get -y upgrade
+curl -sL https://deb.nodesource.com/setup | sudo bash -
+apt-get install -y nodejs zip nginx
 
 ######Download and install Ghost######
 mkdir -p /var/www
@@ -50,26 +38,44 @@ curl -L -O https://ghost.org/zip/ghost-latest.zip
 unzip -d ghost ghost-latest.zip
 rm ghost-latest.zip
 cd ghost/
-/usr/local/bin/npm install --production
+sed -e "s/my-ghost-blog.com/$HOSTNAME/" <config.example.js >config.js
+/usr/bin/npm install --production
 
-######Edit the Config File######
-sed -e 's/127.0.0.1/0.0.0.0/' -e 's/2368/80/' <config.example.js >config.js
+#######Setup Ghost User######
+adduser --shell /bin/bash --gecos 'Ghost application' ghost --disabled-password
+echo ghost:ghost | chpasswd
+chown -R ghost:ghost /var/www/ghost/
 
-######Install Forever######
-/usr/local/bin/npm install -g forever
+######Config Nginx######
+echo "configuring Nginx"
+echo "server {" >> /etc/nginx/sites-available/ghost
+echo "    listen 80;" >> /etc/nginx/sites-available/ghost
+echo "    server_name $HOSTNAME;" >> /etc/nginx/sites-available/ghost
+echo "    location / {" >> /etc/nginx/sites-available/ghost
+echo "        proxy_set_header   X-Real-IP \$remote_addr;" >> /etc/nginx/sites-available/ghost
+echo "        proxy_set_header   Host      \$http_host;" >> /etc/nginx/sites-available/ghost
+echo "        proxy_pass         http://127.0.0.1:2368;" >> /etc/nginx/sites-available/ghost
+echo "        }" >> /etc/nginx/sites-available/ghost
+echo "    }" >> /etc/nginx/sites-available/ghost
 
-#####Setup Forever Start Script######
-echo "#!/bin/bash" >> /usr/local/bin/ghoststart.sh
-echo "export PATH=/usr/local/bin:$PATH" >> /usr/local/bin/ghoststart.sh
-echo "cd /var/www/ghost" >> /usr/local/bin/ghoststart.sh
-echo "export NODE_ENV=production" >> /usr/local/bin/ghoststart.sh
-echo "NODE_ENV=production /usr/local/bin/forever -a -l /var/log/ghost start --sourceDir /var/www/ghost index.js" >> /usr/local/bin/ghoststart.sh
-chmod 755 /usr/local/bin/ghoststart.sh
+ln -s /etc/nginx/sites-available/ghost /etc/nginx/sites-enabled/ghost
 
-######Create Startup Cron######
-echo "@reboot /usr/local/bin/ghoststart.sh" > mycron
-crontab mycron
-rm mycron
+rm /etc/nginx/sites-available/default
+rm /etc/nginx/sites-enabled/default
+service nginx restart
 
-######Start Ghost with Forever######
-sh /usr/local/bin/ghoststart.sh
+######Install PM2######
+echo "#!/bin/bash" >> /home/ghost/start.sh
+echo "export NODE_ENV=production" >> /home/ghost/start.sh
+echo "cd /var/www/ghost/" >> /home/ghost/start.sh
+echo "npm start --production" >> /home/ghost/start.sh
+chmod +x /home/ghost/start.sh
+
+/usr/bin/npm install -g pm2
+
+su -c "echo 'export NODE_ENV=production' >> ~/.profile" -s /bin/bash ghost
+su -c "source ~/.profile" -s /bin/bash ghost
+su -c "/usr/bin/pm2 kill" -s /bin/bash ghost
+su -c "env /usr/bin/pm2 start /home/ghost/start.sh --interpreter=bash --name ghost" -s /bin/bash ghost
+env PATH=$PATH:/usr/bin pm2 startup ubuntu -u ghost --hp /home/ghost
+su -c "pm2 save" -s /bin/bash ghost
